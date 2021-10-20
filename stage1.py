@@ -8,15 +8,26 @@ import title_state
 name = "stage1"
 World_WIDTH, World_HEIGHT = 1048, 440
 
-def ScreenEvent():
-    events = get_events()
-    for event in events:
-        if event.type == SDL_QUIT:
-            game_framework.quit()
-        elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
-            game_framework.change_state(title_state)
 
-def handle_events():
+class Monster:
+    def __init__(self):
+        self.mush=load_image('mushroom.png')
+        self.turtle=load_image('turtleman.png')
+        self.frame=0
+        self.s_x=(World_WIDTH/2)
+        self.s_y=80
+        self.m_x=(World_WIDTH/2)
+        self.m_y = 80
+    def move(self):
+        self.s_x -= 2
+        self.m_x +=3
+    def draw(self):
+        self.frame=(self.frame+1)%2
+        self.turtle.clip_draw(self.frame*16,0,16,29,self.s_x,self.s_y)
+        self.mush.clip_draw(self.frame*16,0,16,20,self.m_x,self.m_y)
+
+
+def move_events():
     global running
     global x,y
     global y2
@@ -32,11 +43,11 @@ def handle_events():
             if event.key == SDLK_RIGHT:
                 turn = 2
                 dir+=3
-                m_x-=20
+                m_x-=10
             elif event.key == SDLK_LEFT:
                 turn = 0
                 dir-=3
-                m_x +=20
+                m_x +=10
             elif event.key == SDLK_SPACE:
                 jump = y
                 y2 = y+50
@@ -50,7 +61,6 @@ def handle_events():
             if event.key == SDLK_RIGHT:
                 turn=2
                 dir -= 3
-                m_x -= 20
             elif event.key == SDLK_LEFT:
                 turn = 0
                 dir += 3
@@ -62,11 +72,14 @@ def handle_events():
                     t=i/100
                     y =(1-t)*jump+t*y2
                 delay(0.0005)
+
+
 m_x = World_WIDTH
 open_canvas(World_WIDTH, World_HEIGHT)
 stage = load_image('World 1-1.png')
 character1 = load_image('MM.png')
 character2 = load_image('MM2.png')
+monster=Monster()
 running = True
 x, y = World_WIDTH//2,90
 y2=140
@@ -76,21 +89,23 @@ frame1 = 0
 frame2 = 0
 turn = 0
 
+
 while running:
     clear_canvas()
     stage.clip_draw(0, 100 * 1, 3447, 800, m_x, 100)
+    monster.draw()
+    monster.move()
     if turn ==0:
         character1.clip_draw(frame1 * 26, dir, 25, 55, x, y)
         frame1 = (frame1 + 1) % 5
     if turn==2:
         character2.clip_draw(frame2 * 26, dir, 25, 55, x, y)
         frame2 = (1+frame2) % 5
+
     update_canvas()
 
-    handle_events()
+    move_events()
     delay(0.1)
     x += dir * 2
-
-
 
 close_canvas()
