@@ -68,16 +68,24 @@ class IdleState:
 class RunState:
 
     def enter(boy, event):
-        # fill here
-        pass
+        if event == RIGHT_DOWN:
+            boy.velocity += RUN_SPEED_PPS
+        elif event == LEFT_DOWN:
+            boy.velocity += RUN_SPEED_PPS
+        elif event == RIGHT_UP:
+            boy.velocity += RUN_SPEED_PPS
+        elif event == LEFT_UP:
+            boy.velocity += RUN_SPEED_PPS
+
+        boy.dir=clamp(-1,boy.velocity,1)
 
     def exit(boy, event):
         if event == SPACE:
             boy.fire_ball()
 
     def do(boy):
-        # fill here
         boy.frame = (boy.frame + 1) % 8
+        boy.x+=boy.velocity*game_framework.frame_time
         boy.x = clamp(25, boy.x, 1600 - 25)
 
     def draw(boy):
