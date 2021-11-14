@@ -1,21 +1,20 @@
 from pico2d import *
-import random
-import json
-import os
-from boy import Boy
-
 import game_world
 import game_framework
 import title_state
-
+from MarioClass import Mario
+from MapClass import Stage1
 name = "MainState"
 
-boy=None
+mario=None
 
 def enter():
-    global boy
-    boy=Boy()
-    game_world.add_object(boy,0)
+    global mario
+    global stage
+    stage=Stage1()
+    mario=Mario()
+    game_world.add_object(stage,0)
+    game_world.add_object(mario,1)
 
 
 def exit():
@@ -37,6 +36,11 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.change_state(title_state)
+        else:
+            mario.handle_event(event)
+
+
+
     pass
 
 
@@ -50,6 +54,7 @@ def draw():
     for game_object in game_world.all_objects():
         game_object.draw()  #
     update_canvas()
+    delay(0.08)
     pass
 
 
