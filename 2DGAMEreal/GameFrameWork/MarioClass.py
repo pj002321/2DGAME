@@ -2,7 +2,7 @@ from pico2d import *
 import game_framework
 import time
 RIGHT_DOWN, LEFT_DOWN, RIGHT_UP,LEFT_UP,JUMP_UP,JUMP_DOWN = range(6)
-# fill here
+
 
 key_event_table = {
     (SDL_KEYDOWN, SDLK_RIGHT): RIGHT_DOWN,
@@ -14,11 +14,18 @@ key_event_table = {
 }
 
 PIXEL_PER_METER = (10.0 / 0.6) # 10 pixel 30 cm
+
+# Run Speed
 RUN_SPEED_KMPH = 20.0 # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
+# Jump Speed
+JUMP_SPEED_KMPH = 10.0
+JUMP_SPEED_MPM = (JUMP_SPEED_KMPH*1000.0/60.0)
+JUMP_SPEED_MPS = (JUMP_SPEED_MPM/60.0)
+JUMP_SPEED_PPS = (JUMP_SPEED_MPS*PIXEL_PER_METER)
 
 TIME_PER_ACTION = 0.5
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
@@ -34,6 +41,8 @@ class IdleState:
             mario.velocity -=RUN_SPEED_PPS
         elif event==LEFT_UP:
             mario.velocity +=RUN_SPEED_PPS
+        elif event == JUMP_DOWN:
+            mario.velocity += JUMP_SPEED_PPS
         mario.timer = 1000
 
 
@@ -42,7 +51,6 @@ class IdleState:
 
     def do(mario):
         mario.frame = (mario.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time+1) % 2
-        mario.timer -= 1
 
     def draw(mario):
             mario.Idleimage.clip_draw(int(mario.frame)*40,0,40,53,mario.x,mario.y)
@@ -57,15 +65,17 @@ class RunState:
             mario.velocity -= RUN_SPEED_PPS
         elif event == LEFT_UP:
             mario.velocity += RUN_SPEED_PPS
-
+        elif event == JUMP_DOWN:
+            mario.velocity += JUMP_SPEED_PPS
         mario.dir= clamp(-1, mario .velocity, 1)
 
-    def exit(mario,event): # Exit Action
-        pass
+    def exit(mario,event):
+        if event==JUMP_DOWN:
+            pass
+
 
     def do(mario): # Do Activity
         mario.frame = (mario.frame+FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time) % 5
-        mario.timer -= 1
         mario.x += mario.velocity*game_framework.frame_time
         mario.x = clamp(25, mario.x, 800 - 25)
 
@@ -83,26 +93,30 @@ class JumpState:
         pass
 
     def do(mario):
-        mario.frame=(mario.frame+FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time)%5
-        mario.y += mario.velocity * game_framework.frame_time
+        mario.frame=(mario.frame+FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time)%1
+        mario.y += mario.velocity*game_framework.frame_time
+
     def draw(mario):
         if mario.dir == 1:
-            mario.RRunimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
+            mario.RJumpimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
         else:
-            mario.LRunimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
+            mario.LJumpimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
+
 
 next_state_table = {
-    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState,RIGHT_DOWN: RunState, LEFT_DOWN: RunState,JUMP_DOWN:JumpState},
-    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,JUMP_DOWN:JumpState},
-    JumpState: {RIGHT_UP: RunState, LEFT_UP: RunState,LEFT_DOWN: RunState, RIGHT_DOWN: RunState,JUMP_UP:IdleState}
-
+    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState,RIGHT_DOWN: RunState, LEFT_DOWN: RunState,JUMP_DOWN:JumpState,JUMP_UP:IdleState},
+    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,JUMP_DOWN:JumpState,JUMP_UP:RunState},
+    JumpState: {RIGHT_UP: RunState, LEFT_UP: RunState,LEFT_DOWN: RunState, RIGHT_DOWN: RunState,JUMP_UP:RunState}
 }
+
 class Mario:
 
     def __init__(self):
         self.x, self.y = 800 // 2, 90
         self.LRunimage = load_image('MarioRunStateLeft.png')
         self.RRunimage = load_image('MarioRunStateRight.png')
+        self.LJumpimage = load_image('MarioJumpStateLeft.png')
+        self.RJumpimage = load_image('MarioJumpStateRight.png')
         self.Idleimage = load_image('MarioIdleState.png')
         self.dir =0
         self.frame=0
