@@ -17,7 +17,7 @@ class IdleState:
         stage.x-=0.5
 
     def draw(stage):
-           stage.Stageimage.clip_draw(stage.frame,100,3447,800,stage.x,110)
+           stage.Stageimage.clip_draw(stage.frame,100,3447,800,stage.x,105)
 
 class Stage1:
 

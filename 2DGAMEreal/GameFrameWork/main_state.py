@@ -47,14 +47,14 @@ def handle_events():
 def update():
     for game_object in game_world.all_objects():
         game_object.update()
-
+    delay(0.1)
 
 def draw():
     clear_canvas()
     for game_object in game_world.all_objects():
-        game_object.draw()  #
+        game_object.draw()
     update_canvas()
-    delay(0.08)
+
     pass
 
 
