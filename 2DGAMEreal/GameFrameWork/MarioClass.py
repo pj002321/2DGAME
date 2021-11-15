@@ -1,16 +1,19 @@
+import game_world
 from pico2d import *
 import game_framework
 import time
-RIGHT_DOWN, LEFT_DOWN, RIGHT_UP,LEFT_UP,JUMP_UP,JUMP_DOWN = range(6)
+from Fire import FireBall
+RIGHT_DOWN, LEFT_DOWN, RIGHT_UP,LEFT_UP,JUMP_DOWN,JUMP_UP,FIRE_DOWN = range(7)
 
 
 key_event_table = {
     (SDL_KEYDOWN, SDLK_RIGHT): RIGHT_DOWN,
     (SDL_KEYDOWN, SDLK_LEFT): LEFT_DOWN,
     (SDL_KEYDOWN,SDLK_SPACE): JUMP_DOWN,
+    (SDL_KEYUP, SDLK_SPACE): JUMP_UP,
     (SDL_KEYUP, SDLK_RIGHT): RIGHT_UP,
     (SDL_KEYUP, SDLK_LEFT): LEFT_UP,
-    (SDL_KEYUP, SDLK_SPACE): JUMP_UP
+    (SDL_KEYDOWN, SDLK_1): FIRE_DOWN
 }
 
 PIXEL_PER_METER = (10.0 / 0.6) # 10 pixel 30 cm
@@ -47,7 +50,9 @@ class IdleState:
 
 
     def exit(mario,event):
-        pass
+        if event == FIRE_DOWN:
+            mario.fire_ball()
+
 
     def do(mario):
         mario.frame = (mario.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time+1) % 2
@@ -70,9 +75,8 @@ class RunState:
         mario.dir= clamp(-1, mario .velocity, 1)
 
     def exit(mario,event):
-        if event==JUMP_DOWN:
-            pass
-
+        if event == FIRE_DOWN:
+            mario.fire_ball()
 
     def do(mario): # Do Activity
         mario.frame = (mario.frame+FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time) % 5
@@ -84,6 +88,8 @@ class RunState:
             mario.RRunimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
         else:
             mario.LRunimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
+
+
 
 class JumpState:
     def enter(mario,event):
@@ -102,11 +108,30 @@ class JumpState:
         else:
             mario.LJumpimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
 
+class FireBall:
+    Fireimage=None
+    def __init__(mario,x=400,y=300,velocity=1):
+        if FireBall.Fireimage==None:
+            FireBall.Fireimage = load_image('Fire ball.png')
+        mario.x,mario.y,mario.velocity=x,y,velocity
+
+        mario.dir =0
+    def draw(mario):
+        mario.Fireimage.draw(mario.x,mario.y)
+
+    def update(mario):
+        if mario.dir==1:
+            mario.x += mario.velocity - RUN_SPEED_PPS
+        else:
+            mario.x += mario.velocity + RUN_SPEED_PPS
+        if mario.x<25 or mario.x>1600-25:
+            game_world.remove_object(mario)
+
 
 next_state_table = {
-    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState,RIGHT_DOWN: RunState, LEFT_DOWN: RunState,JUMP_DOWN:JumpState,JUMP_UP:IdleState},
-    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,JUMP_DOWN:JumpState,JUMP_UP:RunState},
-    JumpState: {RIGHT_UP: RunState, LEFT_UP: RunState,LEFT_DOWN: RunState, RIGHT_DOWN: RunState,JUMP_UP:RunState}
+    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState,RIGHT_DOWN: RunState, LEFT_DOWN: RunState,JUMP_DOWN:JumpState,JUMP_UP:IdleState,FIRE_DOWN:IdleState},
+    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,JUMP_DOWN:JumpState,JUMP_UP:RunState,FIRE_DOWN:RunState},
+    JumpState: {RIGHT_UP: RunState, LEFT_UP: RunState,LEFT_DOWN: RunState, RIGHT_DOWN: RunState,JUMP_UP:RunState,FIRE_DOWN:IdleState}
 }
 
 class Mario:
@@ -125,7 +150,9 @@ class Mario:
         self.cur_state = IdleState
         self.cur_state.enter(self,None)  # 현재 상태를 idlestate로 설정
 
-
+    def fire_ball(self):
+        fire=FireBall(self.x,self.y,self.dir*3)
+        game_world.add_object(fire,1)
 
     def change_state(self,  state):
         # fill here
@@ -144,6 +171,7 @@ class Mario:
             self.cur_state.exit(self,event)
             self.cur_state=next_state_table[self.cur_state][event]
             self.cur_state.enter(self,event)
+
 
     def draw(self):
         self.cur_state.draw(self)

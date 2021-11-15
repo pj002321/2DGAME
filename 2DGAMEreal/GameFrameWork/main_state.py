@@ -4,6 +4,7 @@ import game_framework
 import title_state
 from MarioClass import Mario
 from MapClass import *
+from MonsterClass import *
 name = "MainState"
 
 mario=None
@@ -12,11 +13,14 @@ def enter():
     global mario
     global stage2
     global stage1
+    global monster
+    monster = Monster()
     stage1=Stage1()
     stage2= Stage2()
     mario=Mario()
     game_world.add_object(stage1,0)
     game_world.add_object(mario,1)
+    game_world.add_object(monster, 1)
 
 
 def exit():
