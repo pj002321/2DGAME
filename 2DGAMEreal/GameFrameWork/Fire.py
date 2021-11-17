@@ -3,7 +3,7 @@ import game_world
 PIXEL_PER_METER = (10.0 / 0.6) # 10 pixel 30 cm
 
 # Run Speed
-RUN_SPEED_KMPH = 10.0 # Km / Hour
+RUN_SPEED_KMPH = 5.0 # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -17,18 +17,27 @@ class FireBall:
     Fireimage=None
     def __init__(self,x=400,y=300,velocity=1):
         if FireBall.Fireimage==None:
-            FireBall.Fireimage = load_image('Fire ball.png')
+            FireBall.RFireimage = load_image('fireRight.png')
+            FireBall.LFireimage = load_image('fireLeft.png')
         self.x,self.y,self.velocity=x,y,velocity
-
-        self.dir= Mario(self.dir)
-
-    def draw(self):
-        self.Fireimage.draw(self.x,self.y)
+        self.dir=0
 
     def update(self):
         if self.dir==1:
             self.x += self.velocity+RUN_SPEED_PPS
-        else:
-            self.x -= self.velocity + RUN_SPEED_PPS
-        if self.x<25 or self.x>1600-25:
+
+        if self.dir==0:
+            self.x -= self.velocity+RUN_SPEED_PPS
+        if self.x<25 or self.x>3000:
             game_world.remove_object(self)
+
+    def get_bb(self):
+        return self.x-10,self.y-5,self.x+10,self.y+5
+
+    def draw(self):
+        if self.dir == 1:
+            self.RFireimage.draw(self.x,self.y)
+        if self.dir == 0:
+            self.LFireimage.draw(self.x, self.y)
+        draw_rectangle(*self.get_bb())
+

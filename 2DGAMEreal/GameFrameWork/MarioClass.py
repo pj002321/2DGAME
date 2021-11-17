@@ -25,7 +25,7 @@ RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
 # Jump Speed
-JUMP_SPEED_KMPH = 10.0
+JUMP_SPEED_KMPH = 2.0
 JUMP_SPEED_MPM = (JUMP_SPEED_KMPH*1000.0/60.0)
 JUMP_SPEED_MPS = (JUMP_SPEED_MPM/60.0)
 JUMP_SPEED_PPS = (JUMP_SPEED_MPS*PIXEL_PER_METER)
@@ -43,10 +43,11 @@ class IdleState:
         elif event == RIGHT_UP:
             mario.velocity -=RUN_SPEED_PPS
         elif event==LEFT_UP:
-            mario.velocity +=RUN_SPEED_PPS
-        elif event == JUMP_DOWN:
-            mario.velocity += JUMP_SPEED_PPS
-        mario.timer = 1000
+            mario.velocity += RUN_SPEED_PPS
+        elif (event == JUMP_DOWN and mario.dir==1) or (event == JUMP_DOWN and mario.dir==0):
+            mario.jump=1
+
+
 
 
     def exit(mario,event):
@@ -58,7 +59,7 @@ class IdleState:
         mario.frame = (mario.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time+1) % 2
 
     def draw(mario):
-            mario.Idleimage.clip_draw(int(mario.frame)*40,0,40,53,mario.x,mario.y)
+        mario.Idleimage.clip_draw(int(mario.frame)*40,0,40,53,mario.x,mario.y)
 
 class RunState:
     def enter(mario,event):
@@ -70,8 +71,10 @@ class RunState:
             mario.velocity -= RUN_SPEED_PPS
         elif event == LEFT_UP:
             mario.velocity += RUN_SPEED_PPS
-        elif event == JUMP_DOWN:
-            mario.velocity += JUMP_SPEED_PPS
+        elif (event == JUMP_DOWN and mario.dir == 1) or (event == JUMP_DOWN and mario.dir == 0):
+            mario.jump = 1
+
+
         mario.dir= clamp(-1, mario .velocity, 1)
 
     def exit(mario,event):
@@ -108,30 +111,15 @@ class JumpState:
         else:
             mario.LJumpimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
 
-class FireBall:
-    Fireimage=None
-    def __init__(mario,x=400,y=300,velocity=1):
-        if FireBall.Fireimage==None:
-            FireBall.Fireimage = load_image('Fire ball.png')
-        mario.x,mario.y,mario.velocity=x,y,velocity
-
-        mario.dir =0
-    def draw(mario):
-        mario.Fireimage.draw(mario.x,mario.y)
-
-    def update(mario):
-        if mario.dir==1:
-            mario.x += mario.velocity + RUN_SPEED_PPS
-        else:
-            mario.x -= mario.velocity + RUN_SPEED_PPS
-        if mario.x<25 or mario.x>1600-25:
-            game_world.remove_object(mario)
 
 
 next_state_table = {
-    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState,RIGHT_DOWN: RunState, LEFT_DOWN: RunState,JUMP_DOWN:JumpState,JUMP_UP:IdleState,FIRE_DOWN:IdleState},
-    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,JUMP_DOWN:JumpState,JUMP_UP:RunState,FIRE_DOWN:RunState},
-    JumpState: {RIGHT_UP: RunState, LEFT_UP: RunState,LEFT_DOWN: RunState, RIGHT_DOWN: RunState,JUMP_UP:RunState,FIRE_DOWN:IdleState}
+    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState, RIGHT_DOWN: RunState, LEFT_DOWN: RunState, JUMP_DOWN: JumpState,
+                JUMP_UP: IdleState, FIRE_DOWN: IdleState},
+    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState, LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,
+               JUMP_DOWN: JumpState, JUMP_UP: RunState, FIRE_DOWN: RunState},
+    JumpState: {RIGHT_UP: RunState, LEFT_UP: RunState, LEFT_DOWN: RunState, RIGHT_DOWN: RunState, JUMP_UP: RunState,
+                FIRE_DOWN: IdleState}
 }
 
 class Mario:
@@ -143,15 +131,23 @@ class Mario:
         self.LJumpimage = load_image('MarioJumpStateLeft.png')
         self.RJumpimage = load_image('MarioJumpStateRight.png')
         self.Idleimage = load_image('MarioIdleState.png')
+        self.font = load_font('ENCR10B.TTF', 16)
         self.dir =0
+        self.key = 0
         self.frame=0
         self.velocity = 0
         self.event_que=[]
         self.cur_state = IdleState
         self.cur_state.enter(self,None)  # 현재 상태를 idlestate로 설정
+        self.jump=1
 
     def fire_ball(self):
         fire=FireBall(self.x,self.y,self.dir*3)
+        fire.update()
+        if self.dir==1:
+            fire.dir=1
+        if self.dir==0:
+            fire.dir=0
         game_world.add_object(fire,1)
 
     def change_state(self,  state):
@@ -162,7 +158,8 @@ class Mario:
     def add_event(self, event):
         self.event_que.insert(0,event)
 
-
+    def get_bb(self):
+        return self.x-30,self.y-25,self.x+30,self.y+25
 
     def update(self):
         self.cur_state.do(self)
@@ -175,6 +172,8 @@ class Mario:
 
     def draw(self):
         self.cur_state.draw(self)
+        self.font.draw(self.x - 60, self.y + 50,'(Time: %3.2f)' % get_time(), (255, 255, 0))
+        draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
         if (event.type,event.key) in key_event_table:

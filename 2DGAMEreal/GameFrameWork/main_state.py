@@ -3,24 +3,45 @@ import game_world
 import game_framework
 import title_state
 from MarioClass import Mario
-from MapClass import *
-from MonsterClass import *
+from MapClass import Stage1
+from MonsterClass import Monster
+from Fire import FireBall
 name = "MainState"
 
 mario=None
+stage1=None
+monsters=[]
+fire=None
+def collide(a,b):
+    left_a,bottom_a,right_a,top_a = a.get_bb()
+    left_b,bottom_b,right_b,top_b = b.get_bb()
+
+    if left_a>right_b:return False
+    if right_a < left_b: return False
+    if top_a < bottom_b: return False
+    if bottom_a > top_b: return False
+
+    return True
+
+
+
 
 def enter():
-    global mario
-    global stage2
     global stage1
-    global monster
-    monster = Monster()
     stage1=Stage1()
-    stage2= Stage2()
-    mario=Mario()
     game_world.add_object(stage1,0)
+
+    global mario
+    mario=Mario()
     game_world.add_object(mario,1)
-    game_world.add_object(monster, 1)
+
+    global fire
+    fire = FireBall()
+    game_world.add_object(fire, 1)
+
+    global monsters
+    monsters = [Monster() for i in range(10)]
+    game_world.add_objects(monsters, 1)
 
 
 def exit():
@@ -35,6 +56,7 @@ def resume():
     pass
 
 
+
 def handle_events():
     events=get_events()
     for event in events:
@@ -45,14 +67,20 @@ def handle_events():
         else:
             mario.handle_event(event)
 
-
-
-    pass
-
-
 def update():
+    global monsters
     for game_object in game_world.all_objects():
         game_object.update()
+
+    for monster in monsters:
+        if collide(mario,monster):
+            monsters.remove(monster)
+            game_world.remove_object(monster)
+
+    for monster in monsters:
+        if collide(fire, monster):
+            monsters.remove(monster)
+            game_world.remove_object(monster)
     delay(0.1)
 
 def draw():
@@ -61,7 +89,7 @@ def draw():
         game_object.draw()
     update_canvas()
 
-    pass
+
 
 
 

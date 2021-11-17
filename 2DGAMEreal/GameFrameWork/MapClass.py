@@ -13,10 +13,9 @@ class DrawMap:
         pass
 
     def do(stage):
-        stage.x=0.0
+
         stage.frame = 0
-        if mario.x>stage.x:
-            stage.x-=0.5
+        stage.x-=0.5
 
     def draw(stage):
         stage.Stageimage1.clip_draw(stage.frame,100,3447,800,stage.x,105)
