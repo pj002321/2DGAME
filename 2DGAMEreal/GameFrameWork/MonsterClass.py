@@ -1,7 +1,7 @@
 from pico2d import *
 import game_framework
 import time
-
+from random import*
 
 PIXEL_PER_METER = (10.0 / 0.6) # 10 pixel 30 cm
 
@@ -16,32 +16,49 @@ ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 5
 
 class MonsterState:
-    def enter(stage, event):
+    def enter(monster, event):
         pass
 
-    def exit(stage, event):
+    def exit(monster, event):
         pass
 
-    def do(stage):
-        stage.frame = 0
-        stage.x -= 0.5
+    def do(monster):
+        monster.dir=0
 
-    def draw(stage):
-        pass
+        if monster.dir==1:
+            monster.x += RUN_SPEED_PPS
+            if monster.x>500:
+                monster.x -= RUN_SPEED_PPS
+                monster.dir==0
+
+        elif monster.dir==0:
+            monster.x-=RUN_SPEED_PPS
+            if monster.x<200:
+                monster.x+=RUN_SPEED_PPS
+                monster.dir == 1
+
+
+        monster.frame = (mario.frame+FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time)%2
+
+    def draw(monster):
+        if mario.dir == 1:
+            mario.Mushroom.clip_draw(int(monster.frame) * 33, 0, 33, 16, monster.x, monster.y)
+        else:
+            mario.Mushroom.clip_draw(int(monster.frame) * 33, 0, 33, 16, monster.x, monster.y)
 
 
 
 class Monster:
 
     def __init__(self):
-        self.x, self.y = 800 // 2, 90
+        self.x, self.y =800/2, 90
         self.dir =0
         self.frame=0
         self.velocity = 0
         self.event_que=[]
         self.cur_state = MonsterState
         self.cur_state.enter(self,None)  # 현재 상태를 idlestate로 설정
-
+        self.Mushroom = load_image('MushRoom.png')
 
 
     def change_state(self,  state):

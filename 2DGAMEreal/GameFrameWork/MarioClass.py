@@ -121,9 +121,9 @@ class FireBall:
 
     def update(mario):
         if mario.dir==1:
-            mario.x += mario.velocity - RUN_SPEED_PPS
-        else:
             mario.x += mario.velocity + RUN_SPEED_PPS
+        else:
+            mario.x -= mario.velocity + RUN_SPEED_PPS
         if mario.x<25 or mario.x>1600-25:
             game_world.remove_object(mario)
 
