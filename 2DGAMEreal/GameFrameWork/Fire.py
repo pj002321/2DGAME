@@ -15,20 +15,22 @@ FRAMES_PER_ACTION = 5
 
 class FireBall:
     Fireimage=None
-    def __init__(self,x=400,y=300,velocity=1):
+    global mario
+    def __init__(self,x=0,y=80,velocity=1):
         if FireBall.Fireimage==None:
             FireBall.RFireimage = load_image('fireRight.png')
             FireBall.LFireimage = load_image('fireLeft.png')
         self.x,self.y,self.velocity=x,y,velocity
         self.dir=0
+        self.font = load_font('ENCR10B.TTF', 16)
 
     def update(self):
+
         if self.dir==1:
             self.x += self.velocity+RUN_SPEED_PPS
-
         if self.dir==0:
             self.x -= self.velocity+RUN_SPEED_PPS
-        if self.x<25 or self.x>3000:
+        if self.x<25 or self.x>3000:  # 삭제 조건
             game_world.remove_object(self)
 
     def get_bb(self):

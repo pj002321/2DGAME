@@ -44,8 +44,18 @@ class IdleState:
             mario.velocity -=RUN_SPEED_PPS
         elif event==LEFT_UP:
             mario.velocity += RUN_SPEED_PPS
-        elif (event == JUMP_DOWN and mario.dir==1) or (event == JUMP_DOWN and mario.dir==0):
-            mario.jump=1
+        elif event == JUMP_DOWN :
+            if mario.jumpchek == 1:
+                if mario.jumpchek == 1:
+                    mario.y += RUN_SPEED_PPS
+                    if mario.y >= RUN_SPEED_PPS + 2:
+                        mario.y -= RUN_SPEED_PPS
+                        mario.jump = 2
+                if mario.jumpchek == 2:
+                    mario.y -= RUN_SPEED_PPS
+                    if self.y <= 0:
+                        self.y += RUN_SPEED_PPS
+                        self.jump = 1
 
 
 
@@ -105,6 +115,7 @@ class JumpState:
         mario.frame=(mario.frame+FRAMES_PER_ACTION*ACTION_PER_TIME*game_framework.frame_time)%1
         mario.y += mario.velocity*game_framework.frame_time
 
+
     def draw(mario):
         if mario.dir == 1:
             mario.RJumpimage.clip_draw(int(mario.frame) * 40, 0, 40, 53, mario.x, mario.y)
@@ -125,7 +136,7 @@ next_state_table = {
 class Mario:
 
     def __init__(self):
-        self.x, self.y = 800 // 2, 90
+        self.x, self.y = 50 // 2, 90
         self.LRunimage = load_image('MarioRunStateLeft.png')
         self.RRunimage = load_image('MarioRunStateRight.png')
         self.LJumpimage = load_image('MarioJumpStateLeft.png')
@@ -140,6 +151,7 @@ class Mario:
         self.cur_state = IdleState
         self.cur_state.enter(self,None)  # 현재 상태를 idlestate로 설정
         self.jump=1
+        self.jumpchek=1
 
     def fire_ball(self):
         fire=FireBall(self.x,self.y,self.dir*3)
@@ -159,7 +171,7 @@ class Mario:
         self.event_que.insert(0,event)
 
     def get_bb(self):
-        return self.x-30,self.y-25,self.x+30,self.y+25
+        return self.x-20,self.y-25,self.x+20,self.y+25
 
     def update(self):
         self.cur_state.do(self)
@@ -169,10 +181,8 @@ class Mario:
             self.cur_state=next_state_table[self.cur_state][event]
             self.cur_state.enter(self,event)
 
-
     def draw(self):
         self.cur_state.draw(self)
-        self.font.draw(self.x - 60, self.y + 50,'(Time: %3.2f)' % get_time(), (255, 255, 0))
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):

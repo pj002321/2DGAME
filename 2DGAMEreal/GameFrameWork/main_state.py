@@ -2,16 +2,20 @@ from pico2d import *
 import game_world
 import game_framework
 import title_state
-from MarioClass import Mario
+from MarioClass import*
 from MapClass import Stage1
-from MonsterClass import Monster
+from MonsterClass import *
 from Fire import FireBall
 name = "MainState"
+
 
 mario=None
 stage1=None
 monsters=[]
+tutles=None
 fire=None
+
+
 def collide(a,b):
     left_a,bottom_a,right_a,top_a = a.get_bb()
     left_b,bottom_b,right_b,top_b = b.get_bb()
@@ -40,8 +44,13 @@ def enter():
     game_world.add_object(fire, 1)
 
     global monsters
-    monsters = [Monster() for i in range(10)]
+    monsters = [Mush() for i in range(4)]
     game_world.add_objects(monsters, 1)
+
+    global turtles
+    turtles = [Turtle() for i in range(3)]
+    game_world.add_objects(turtles, 1)
+
 
 
 def exit():
@@ -69,6 +78,7 @@ def handle_events():
 
 def update():
     global monsters
+    global fire
     for game_object in game_world.all_objects():
         game_object.update()
 
@@ -77,11 +87,20 @@ def update():
             monsters.remove(monster)
             game_world.remove_object(monster)
 
-    for monster in monsters:
         if collide(fire, monster):
             monsters.remove(monster)
             game_world.remove_object(monster)
-    delay(0.1)
+
+    for turtle in turtles:
+        if collide(mario,turtle):
+            turtles.remove(turtle)
+            game_world.remove_object(turtle)
+
+        if collide(turtle, fire):
+            monsters.remove(turtle)
+            game_world.remove_object(turtle)
+
+    delay(0.03)
 
 def draw():
     clear_canvas()
